@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Email Cleaner</title>
+    <title>Smart Email SaaS Dashboard</title>
     <script>window.tailwind = { config: { corePlugins: { preflight: true } } };</script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -21,8 +21,9 @@
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
-    <div class="max-w-6xl mx-auto px-4 py-8">
+    <div class="max-w-7xl mx-auto px-4 py-8">
         
+        <!-- --- Navigation Bar --- -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b border-slate-800 pb-5 gap-4">
             <h1 class="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent flex items-center">
                 <span><i class="fas fa-shield-halved mr-2 text-indigo-400"></i>Smart Email Cleaner</span>
@@ -30,88 +31,225 @@
             </h1>
             
             <div class="flex flex-wrap items-center gap-4 w-full sm:w-auto justify-end">
+                <div class="flex items-center gap-2 bg-slate-900/80 border border-slate-800 px-3 py-1.5 rounded-xl shadow-inner">
+                    <span class="text-xs font-semibold text-slate-400 flex items-center gap-1">
+                        <i class="fas fa-bolt text-amber-400 animate-pulse"></i> Auto-Clean (24h)
+                    </span>
+                    <button id="auto-clean-toggle" class="w-10 h-6 flex items-center bg-slate-800 rounded-full p-1 cursor-pointer transition-colors duration-300">
+                        <div class="bg-slate-400 w-4 h-4 rounded-full shadow-md transform duration-300" id="toggle-circle"></div>
+                    </button>
+                </div>
+
                 <div id="user-profile-card" class="hidden items-center gap-3 bg-slate-900 border border-slate-800 rounded-xl p-2 pr-4 shadow-md">
                     <img id="user-avatar" src="" alt="Avatar" class="w-8 h-8 rounded-full border border-indigo-500/30 object-cover">
-                    <div class="text-left max-w-[180px]">
+                    <div class="text-left max-w-[150px]">
                         <p id="user-name" class="text-xs font-bold text-slate-200 truncate"></p>
                         <p id="user-email" class="text-[10px] text-slate-400 truncate"></p>
                     </div>
                 </div>
 
-                <a href="/auth/google" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold transition flex items-center gap-2 shadow">
-                    <i class="fas fa-user-plus text-cyan-400"></i> Switch Another Account
+                <a href="/auth/google" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow">
+                    <i class="fas fa-user-plus text-cyan-400"></i> Switch Account
                 </a>
                 <span id="status-badge" class="px-3 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full text-xs">Connecting...</span>
-            </div>
-        </div>
 
-        <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 mb-8 shadow-xl">
-            <h2 class="text-sm font-semibold text-indigo-400 uppercase tracking-wider mb-3">
-                <i class="fas fa-filter mr-2"></i> Custom Clean Filters (Keywords, Names or Emails)
-            </h2>
-            <div class="flex flex-col md:flex-row gap-3">
-                <input type="text" id="keywords-input" 
-                    class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition shadow-inner"
-                    value="daraz, ketogo, please confirm, please review, security code, verification code, otp, promo, sale">
-                
-                <button id="instant-filter-btn" class="px-6 py-3 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 font-bold rounded-lg text-sm transition shadow flex items-center justify-center gap-2 whitespace-nowrap">
-                    <i class="fas fa-bolt"></i> Bulk Filter & Delete
+                <button id="logoutBtn" class="bg-red-600/90 hover:bg-red-700 text-white text-xs font-semibold py-2 px-3 rounded-lg transition flex items-center gap-1.5 shadow">
+                    <i class="fas fa-sign-out-alt"></i> Logout
                 </button>
             </div>
-            <p class="text-xs text-slate-500 mt-2">
-                💡 <b>Rule:</b> You can input comma-separated targets above to clean en masse, or look down at the Safe list and hit the <b>Trash Icon (<i class="fas fa-trash-can"></i>)</b> to target explicit single emails.
-            </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-xl">
-                <p class="text-sm text-slate-400 uppercase font-semibold">Total Scanned</p>
-                <h3 class="text-4xl font-extrabold mt-2 text-indigo-400" id="stat-scanned">0</h3>
+        <!-- --- Advanced Filtering Rules Panel --- -->
+        <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 mb-8 shadow-xl space-y-4">
+            <h2 class="text-sm font-semibold text-indigo-400 uppercase tracking-wider flex items-center gap-2">
+                <i class="fas fa-sliders mr-1"></i> Control Panel & Filtering Rules
+            </h2>
+            
+            <div class="flex flex-col lg:flex-row gap-3">
+                <div class="flex-1">
+                    <label class="block text-[11px] text-slate-400 font-bold uppercase mb-1.5">Spam Keywords (Comma separated)</label>
+                    <input type="text" id="keywords-input" 
+                        class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition shadow-inner"
+                        placeholder="e.g. facebook, promo, unsubscribe, newsletter...">
+                </div>
+                
+                <div class="w-full lg:w-64">
+                    <label class="block text-[11px] text-slate-400 font-bold uppercase mb-1.5">Scan Date Range Filter</label>
+                    <select id="date-range-select" 
+                        class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition shadow-inner cursor-pointer">
+                        <option value="all" selected>📅 All Time</option>
+                        <option value="7d">📅 Last 7 Days</option>
+                        <option value="30d">📅 Last 30 Days</option>
+                        <option value="1m">📅 Older than 1 Month</option>
+                        <option value="2m">📅 Older than 2 Months</option>
+                        <option value="3m">📅 Older than 3 Months</option>
+                        <option value="6m">📅 Older than 6 Months</option>
+                    </select>
+                </div>
             </div>
-            <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-xl">
-                <p class="text-sm text-slate-400 uppercase font-semibold">Deleted (Junk wiped)</p>
-                <h3 class="text-4xl font-extrabold mt-2 text-red-400" id="stat-deleted">0</h3>
+
+            <div>
+                <label class="block text-[11px] text-emerald-400 font-bold uppercase mb-1.5">
+                    <i class="fas fa-shield-heart"></i> Whitelist / Safe Domains (Never Match as Junk)
+                </label>
+                <input type="text" id="whitelist-input" 
+                    class="w-full bg-slate-950 border border-emerald-950/60 rounded-lg px-4 py-2.5 text-sm text-emerald-300 focus:outline-none focus:border-emerald-500/50 transition shadow-inner placeholder-emerald-800/60"
+                    placeholder="Enter domains or trusted addresses to ignore (e.g. github.com, office.com)"
+                    value="gmail.com, github.com">
             </div>
-            <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-xl">
-                <p class="text-sm text-slate-400 uppercase font-semibold">Kept (Safe Inbox)</p>
-                <h3 class="text-4xl font-extrabold mt-2 text-emerald-400" id="stat-kept">0</h3>
+
+            <div class="flex flex-wrap items-center gap-3 bg-slate-950/50 p-3 rounded-lg border border-slate-800/60">
+                <span class="text-xs font-bold text-slate-400 mr-2"><i class="fas fa-tags mr-1"></i> Quick Presets:</span>
+                <label class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-md cursor-pointer select-none hover:border-indigo-500 transition text-xs">
+                    <input type="checkbox" class="category-checkbox accent-indigo-500" data-keywords="facebook, linkedin, instagram, twitter, notification">
+                    <span class="text-slate-300 font-medium">💬 Social Alerts</span>
+                </label>
+                <label class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-md cursor-pointer select-none hover:border-indigo-500 transition text-xs">
+                    <input type="checkbox" class="category-checkbox accent-indigo-500" data-keywords="unsubscribe, newsletter, digest, update">
+                    <span class="text-slate-300 font-medium">✉️ Subscriptions</span>
+                </label>
+                <label class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-md cursor-pointer select-none hover:border-indigo-500 transition text-xs">
+                    <input type="checkbox" class="category-checkbox accent-indigo-500" data-keywords="promo, sale, discount, cashback, offer, marketing">
+                    <span class="text-slate-300 font-medium">🔥 Marketing & Offers</span>
+                </label>
             </div>
         </div>
 
-        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 mb-8 flex justify-between items-center">
+        <!-- --- Counter Statistics Summary --- -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-xl">
+                <p class="text-xs text-slate-400 uppercase font-semibold">Total Scanned</p>
+                <h3 class="text-2xl font-extrabold mt-1 text-indigo-400" id="stat-scanned">0</h3>
+            </div>
+            <div class="bg-slate-900 p-4 rounded-xl border border-amber-500/20 shadow-xl">
+                <p class="text-xs text-slate-400 uppercase font-semibold">Detected Junk (Review)</p>
+                <h3 class="text-2xl font-extrabold mt-1 text-amber-400" id="stat-junk">0</h3>
+            </div>
+            <div class="bg-slate-900 p-4 rounded-xl border border-emerald-500/20 shadow-xl">
+                <p class="text-xs text-slate-400 uppercase font-semibold">Kept Safe (Inbox)</p>
+                <h3 class="text-2xl font-extrabold mt-1 text-emerald-400" id="stat-kept">0</h3>
+            </div>
+            <div class="bg-slate-900 p-4 rounded-xl border border-red-500/20 shadow-xl">
+                <p class="text-xs text-slate-400 uppercase font-semibold">Wiped & Cleaned</p>
+                <h3 class="text-2xl font-extrabold mt-1 text-red-400" id="stat-deleted">0</h3>
+            </div>
+        </div>
+
+        <!-- --- Action Status Bar Manager --- -->
+        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 mb-8 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3">
                 <div id="inline-spinner" class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-indigo-500 hidden"></div>
                 <p id="loading-text" class="text-sm text-slate-400">Ready to clean...</p>
             </div>
-            <div class="flex gap-2">
-                <button id="rescan-btn" class="hidden px-5 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 font-semibold rounded-lg text-sm transition shadow flex items-center gap-2">
-                    <i class="fas fa-redo"></i> Restart Scan
+            <div class="flex flex-wrap gap-2 w-full sm:w-auto justify-end">
+                <button id="export-csv-btn" class="hidden px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg text-xs transition shadow flex items-center gap-1.5">
+                    <i class="fas fa-file-csv"></i> Export Clean Report (CSV)
                 </button>
-                <button id="load-more-btn" class="hidden px-5 py-2 bg-indigo-600 hover:bg-indigo-500 font-semibold rounded-lg text-sm transition shadow-lg flex items-center gap-2">
-                    <i class="fas fa-sync"></i> Scan Next 100 Emails
+                <button id="rescan-btn" class="hidden px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 font-semibold rounded-lg text-xs transition flex items-center gap-1.5">
+                    <i class="fas fa-redo"></i> Restart
+                </button>
+                <button id="load-more-btn" class="hidden px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 font-semibold rounded-lg text-xs transition flex items-center gap-1.5">
+                    <i class="fas fa-sync"></i> Load Next 100
+                </button>
+                <button id="final-delete-btn" class="hidden px-5 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-xs transition shadow-lg flex items-center gap-1.5">
+                    <i class="fas fa-trash"></i> Confirm Bulk Delete Trash
                 </button>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div class="bg-slate-900 rounded-xl border border-red-500/20 p-6 shadow-xl">
-                <h2 class="text-lg font-bold text-red-400 mb-4 flex items-center justify-between">
-                    <span><i class="fas fa-trash-can mr-2"></i> Deleted Junk Emails List</span>
-                    <span id="deleted-badge" class="text-xs bg-red-500/10 px-2.5 py-0.5 rounded-md border border-red-500/20">0</span>
+        <!-- --- Email Grid Display Layout --- -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- 1. Wipe by Sender Origin Column (Matches style from image_f7d867.png) -->
+            <div class="bg-slate-900 rounded-xl border border-indigo-500/20 p-6 shadow-xl lg:col-span-1">
+                <h2 class="text-md font-bold text-indigo-400 mb-2 flex items-center">
+                    <i class="fas fa-envelope-open-text mr-2"></i> Wipe by Sender Origin
                 </h2>
-                <div class="max-h-[500px] overflow-y-auto space-y-3 pr-2" id="deleted-list"></div>
+                <p class="text-[11px] text-slate-400 mb-4">Click a sender address to bulk delete all emails belonging to them instantly.</p>
+                <div class="max-h-[550px] overflow-y-auto space-y-2.5 pr-1" id="sender-filter-list">
+                    <p class="text-xs text-slate-500 italic">No sender data aggregated yet...</p>
+                </div>
             </div>
 
-            <div class="bg-slate-900 rounded-xl border border-emerald-500/20 p-6 shadow-xl">
+            <!-- 2. Review Potential Junk Column -->
+            <div class="bg-slate-900 rounded-xl border border-amber-500/20 p-6 shadow-xl lg:col-span-1">
+                <h2 class="text-lg font-bold text-amber-400 mb-4 flex items-center justify-between">
+                    <span><i class="fas fa-exclamation-triangle mr-2"></i> Review Potential Junk</span>
+                    <span id="junk-badge" class="text-xs bg-amber-500/10 px-2.5 py-0.5 rounded-md border border-amber-500/20">0</span>
+                </h2>
+                <div class="max-h-[550px] overflow-y-auto space-y-3 pr-2" id="junk-list"></div>
+            </div>
+
+            <!-- 3. Kept Safe Emails Column -->
+            <div class="bg-slate-900 rounded-xl border border-emerald-500/20 p-6 shadow-xl lg:col-span-1">
                 <h2 class="text-lg font-bold text-emerald-400 mb-4 flex items-center justify-between">
-                    <span><i class="fas fa-check-circle mr-2"></i> Kept Safe Emails List</span>
+                    <span><i class="fas fa-check-circle mr-2"></i> Kept Safe Emails</span>
                     <span id="kept-badge" class="text-xs bg-emerald-500/10 px-2.5 py-0.5 rounded-md border border-emerald-500/20">0</span>
                 </h2>
-                <div class="max-h-[500px] overflow-y-auto space-y-3 pr-2" id="kept-list"></div>
+                <div class="max-h-[550px] overflow-y-auto space-y-3 pr-2" id="kept-list"></div>
+            </div>
+        </div>
+
+        <!-- --- Trash History/Undo Row --- -->
+        <div class="mt-8 bg-slate-900 rounded-xl border border-red-500/20 p-6 shadow-xl">
+            <h2 class="text-sm font-bold text-red-400 mb-3 flex items-center justify-between">
+                <span><i class="fas fa-trash-can mr-2"></i> Undo Zone (Trash History Logs)</span>
+                <span id="deleted-badge" class="text-xs bg-red-500/10 px-2.5 py-0.5 rounded-md border border-red-500/20">0</span>
+            </h2>
+            <div class="max-h-[150px] overflow-y-auto space-y-2 pr-2 flex flex-wrap gap-2" id="deleted-list"></div>
+        </div>
+
+    </div>
+
+    <!-- --- NEW: Dedicated Sender Origin Email Inspector Modal --- -->
+    <div id="sender-inspection-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl p-6 shadow-2xl relative flex flex-col max-h-[85vh]">
+            <button onclick="closeSenderModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-100 transition text-lg">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <div class="border-b border-slate-800 pb-3 mb-4">
+                <span class="px-2 py-0.5 text-[10px] uppercase font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded mb-1 inline-block">Sender Pipeline Analysis</span>
+                <h3 id="sender-modal-title" class="text-base font-bold text-slate-200 truncate pr-8"></h3>
+            </div>
+
+            <!-- Global Action Top Row inside Modal -->
+            <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800 mb-4 flex justify-between items-center shrink-0">
+                <span class="text-xs text-slate-400 font-medium">Clear out entire source queue:</span>
+                <button id="sender-modal-bulk-btn" class="px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-xs transition flex items-center gap-1.5 shadow">
+                    <i class="fas fa-trash-can"></i> Wipe All From This Sender
+                </button>
+            </div>
+
+            <!-- Scrollable Email Inspection List -->
+            <div id="sender-modal-list" class="overflow-y-auto space-y-4 flex-1 pr-1 custom-scrollbar">
+                <!-- Items populated dynamically -->
+            </div>
+            
+            <div class="mt-4 pt-3 border-t border-slate-800 flex justify-end shrink-0">
+                <button onclick="closeSenderModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-lg text-xs transition">Exit Viewer</button>
             </div>
         </div>
     </div>
 
+    <!-- --- Standard Preview Modal (For single cards) --- -->
+    <div id="preview-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
+            <button id="close-modal-btn" class="absolute top-4 right-4 text-slate-400 hover:text-slate-100 transition text-lg">
+                <i class="fas fa-times"></i>
+            </button>
+            <span class="px-2 py-0.5 text-[10px] uppercase font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded mb-2 inline-block">Email Insights Preview</span>
+            <h3 id="modal-subject" class="text-md font-bold text-slate-100 mb-1 truncate pr-6"></h3>
+            <p id="modal-from" class="text-xs text-slate-400"></p>
+            <p id="modal-date" class="text-[11px] text-indigo-400 border-b border-slate-800 pb-3 mb-3"></p>
+            <div id="modal-body" class="text-sm text-slate-300 bg-slate-950 p-4 rounded-xl max-h-60 overflow-y-auto leading-relaxed border border-slate-900 shadow-inner whitespace-pre-wrap"></div>
+            <div class="mt-4 flex justify-end">
+                <button id="modal-ok-btn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg text-xs transition">Got it</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- --- Javascript Execution Engine --- -->
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
@@ -119,7 +257,70 @@
         let currentNextPageToken = null;
         let cumulativeScanned = 0;
         let cumulativeDeleted = 0;
+        
         let activeKeptEmails = [];
+        let activeJunkEmails = [];
+        let recentlyDeletedEmails = []; 
+        let downloadedHistoryForCSV = []; 
+        let activeModalSenderAddress = null;
+
+        const categoryCheckboxes = document.querySelectorAll('.category-checkbox');
+        const keywordsInput = document.getElementById('keywords-input');
+        const whitelistInput = document.getElementById('whitelist-input');
+        const dateRangeSelect = document.getElementById('date-range-select');
+
+        let autoCleanEnabled = false;
+        const toggleBtn = document.getElementById('auto-clean-toggle');
+        const toggleCircle = document.getElementById('toggle-circle');
+        
+        toggleBtn.addEventListener('click', () => {
+            autoCleanEnabled = !autoCleanEnabled;
+            if (autoCleanEnabled) {
+                toggleBtn.classList.remove('bg-slate-800');
+                toggleBtn.classList.add('bg-indigo-600');
+                toggleCircle.classList.add('translate-x-4');
+                toggleCircle.classList.remove('bg-slate-400');
+                toggleCircle.classList.add('bg-white');
+                document.getElementById('loading-text').innerText = "⏰ Auto-Clean scheduled successfully for every 24 Hours!";
+            } else {
+                toggleBtn.classList.remove('bg-indigo-600');
+                toggleBtn.classList.add('bg-slate-800');
+                toggleCircle.classList.remove('translate-x-4');
+                toggleCircle.classList.remove('bg-white');
+                toggleCircle.classList.add('bg-slate-400');
+                document.getElementById('loading-text').innerText = "Scheduler disabled.";
+            }
+        });
+
+        categoryCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                let currentKeywords = keywordsInput.value.split(',').map(k => k.trim()).filter(k => k !== "");
+                const checkboxKeywords = checkbox.getAttribute('data-keywords').split(',').map(k => k.trim());
+                if (checkbox.checked) {
+                    checkboxKeywords.forEach(word => { if (!currentKeywords.includes(word)) currentKeywords.push(word); });
+                } else {
+                    currentKeywords = currentKeywords.filter(word => !checkboxKeywords.includes(word));
+                }
+                keywordsInput.value = currentKeywords.join(', ');
+                applyFiltersOnFly();
+            });
+        });
+
+        keywordsInput.addEventListener('input', applyFiltersOnFly);
+        whitelistInput.addEventListener('input', applyFiltersOnFly);
+        dateRangeSelect.addEventListener('change', () => { resetDashboardState(); scanBatch(null); });
+
+        function getDateQuery(rangeType) {
+            const today = new Date();
+            const formatDate = (date) => `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
+            if (rangeType === '7d') { const d = new Date(); d.setDate(today.getDate() - 7); return `after:${formatDate(d)}`; }
+            if (rangeType === '30d') { const d = new Date(); d.setDate(today.getDate() - 30); return `after:${formatDate(d)}`; }
+            if (rangeType === '1m') { const d = new Date(); d.setMonth(today.getMonth() - 1); return `before:${formatDate(d)}`; }
+            if (rangeType === '2m') { const d = new Date(); d.setMonth(today.getMonth() - 2); return `before:${formatDate(d)}`; }
+            if (rangeType === '3m') { const d = new Date(); d.setMonth(today.getMonth() - 3); return `before:${formatDate(d)}`; }
+            if (rangeType === '6m') { const d = new Date(); d.setMonth(today.getMonth() - 6); return `before:${formatDate(d)}`; }
+            return '';
+        }
 
         function fetchUserProfile() {
             fetch('/api/user-profile')
@@ -129,199 +330,494 @@
                     document.getElementById('user-avatar').src = user.picture || 'https://via.placeholder.com/150';
                     document.getElementById('user-name').innerText = user.name || 'Google User';
                     document.getElementById('user-email').innerText = user.email;
-                    document.getElementById('user-profile-card').classList.remove('hidden');
-                    document.getElementById('user-profile-card').classList.add('flex');
+                    document.getElementById('user-profile-card').className = 'flex items-center gap-3 bg-slate-900 border border-slate-800 rounded-xl p-2 pr-4 shadow-md';
                 }
-            })
-            .catch(err => console.error("Error pulling profile:", err));
+            }).catch(err => console.error(err));
         }
 
-        function renderLists() {
-            document.getElementById('stat-scanned').innerText = cumulativeScanned;
-            document.getElementById('stat-deleted').innerText = cumulativeDeleted;
-            document.getElementById('stat-kept').innerText = cumulativeScanned - cumulativeDeleted;
+        function applyFiltersOnFly() {
+            const inputVal = keywordsInput.value;
+            const customKeywords = inputVal.split(',').map(k => k.trim().toLowerCase()).filter(k => k !== "");
             
-            document.getElementById('deleted-badge').innerText = cumulativeDeleted;
-            document.getElementById('kept-badge').innerText = activeKeptEmails.length;
+            const whiteVal = whitelistInput.value;
+            const whitelist = whiteVal.split(',').map(w => w.trim().toLowerCase()).filter(w => w !== "");
 
-            const keptListEl = document.getElementById('kept-list');
-            keptListEl.innerHTML = "";
+            const allFetched = [...activeKeptEmails, ...activeJunkEmails];
+            const tempKept = [];
+            const tempJunk = [];
+
+            allFetched.forEach(email => {
+                const sub = email.subject.toLowerCase();
+                const from = email.from.toLowerCase();
+                const isWhitelisted = whitelist.some(rule => from.includes(rule) || sub.includes(rule));
+                
+                if (isWhitelisted) {
+                    tempKept.push(email);
+                } else {
+                    const isSpam = customKeywords.some(kw => sub.includes(kw) || from.includes(kw));
+                    if (isSpam) tempJunk.push(email);
+                    else tempKept.push(email);
+                }
+            });
+
+            activeKeptEmails = tempKept;
+            activeJunkEmails = tempJunk;
+            renderLists();
+            aggregateSenderList();
             
-            activeKeptEmails.forEach((email, index) => {
-                keptListEl.innerHTML += `
-                    <div class="p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-lg text-sm flex justify-between items-center gap-4 transition hover:bg-emerald-500/10">
-                        <div class="flex-1 min-w-0">
-                            <p class="font-semibold text-slate-200 truncate"><i class="fas fa-check text-emerald-400 mr-1.5"></i>${email.subject}</p>
-                            <p class="text-xs text-slate-400 mt-1 pl-5 truncate">From: ${email.from}</p>
+            if (activeModalSenderAddress) {
+                renderSenderInspectionModal(activeModalSenderAddress);
+            }
+        }
+
+        function extractCleanEmail(fromStr) {
+            const match = fromStr.match(/<([^>]+)>/);
+            return match ? match[1].trim() : fromStr.trim();
+        }
+
+        function extractCleanName(fromStr) {
+            const match = fromStr.match(/^"([^"]+)"|([^\s<]+)/);
+            if (match) {
+                return (match[1] || match[2]).replace(/['"]/g, '').trim();
+            }
+            return "Unknown User";
+        }
+
+        function aggregateSenderList() {
+            const senderMap = {};
+            const allVisibleEmails = [...activeKeptEmails, ...activeJunkEmails];
+            
+            allVisibleEmails.forEach(email => {
+                const cleanEmail = extractCleanEmail(email.from);
+                if (!senderMap[cleanEmail]) senderMap[cleanEmail] = [];
+                senderMap[cleanEmail].push(email);
+            });
+
+            const senderContainer = document.getElementById('sender-filter-list');
+            senderContainer.innerHTML = "";
+
+            if(Object.keys(senderMap).length === 0) {
+                senderContainer.innerHTML = `<p class="text-xs text-slate-500 italic">No sender data aggregated yet...</p>`;
+                return;
+            }
+
+            Object.entries(senderMap)
+                .sort((a, b) => b[1].length - a[1].length)
+                .forEach(([senderAddress, emails]) => {
+                    senderContainer.innerHTML += `
+                        <div onclick="openSenderInspection('${senderAddress}')" 
+                             class="flex justify-between items-center bg-slate-950/60 hover:bg-slate-950 border border-slate-800 rounded-xl p-3 cursor-pointer group transition duration-200">
+                            <span class="text-xs font-semibold text-slate-300 group-hover:text-indigo-400 truncate max-w-[210px]">
+                                ${senderAddress}
+                            </span>
+                            <span class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[10px] px-2.5 py-1 rounded-md font-bold transition group-hover:bg-indigo-500/20">
+                                ${emails.length} items
+                            </span>
+                        </div>`;
+                });
+        }
+
+        window.openSenderInspection = function(senderAddress) {
+            activeModalSenderAddress = senderAddress;
+            renderSenderInspectionModal(senderAddress);
+            document.getElementById('sender-inspection-modal').classList.remove('hidden');
+        };
+
+        window.closeSenderModal = function() {
+            activeModalSenderAddress = null;
+            document.getElementById('sender-inspection-modal').classList.add('hidden');
+        };
+
+        // --- ফাইল এটাচমেন্ট রেন্ডার করার ফাংশন (৫ নম্বর পয়েন্টের জন্য) ---
+        function generateAttachmentHTML(attachments) {
+            if (!attachments || attachments.length === 0) {
+                return `<span class="text-slate-500 italic text-[11px]">No documents attached to this node.</span>`;
+            }
+            
+            let html = `<div class="flex flex-wrap gap-2 mt-1">`;
+            attachments.forEach(file => {
+                html += `
+                    <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-[11px] font-medium text-slate-300 hover:border-indigo-500/50 transition">
+                        <i class="fas fa-file-lines text-indigo-400 text-xs"></i>
+                        <span class="truncate max-w-[140px]" title="${file.filename}">${file.filename}</span>
+                        <span class="text-[9px] text-slate-500 font-mono">(${file.size || 'N/A'})</span>
+                    </div>`;
+            });
+            html += `</div>`;
+            return html;
+        }
+
+        // Render sequential detail cards with full parameters (Name, Sender Email, Subject, Body, Files, Delete) inside modal
+        function renderSenderInspectionModal(senderAddress) {
+            const allVisibleEmails = [...activeKeptEmails, ...activeJunkEmails];
+            const matchingEmails = allVisibleEmails.filter(email => extractCleanEmail(email.from) === senderAddress);
+            
+            document.getElementById('sender-modal-title').innerText = `${senderAddress}`;
+            
+            const listContainer = document.getElementById('sender-modal-list');
+            listContainer.innerHTML = "";
+
+            if (matchingEmails.length === 0) {
+                listContainer.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-6">All items from this sender have been wiped clean.</p>`;
+                document.getElementById('sender-modal-bulk-btn').disabled = true;
+                document.getElementById('sender-modal-bulk-btn').className = "px-3 py-1.5 bg-slate-800 text-slate-600 rounded-lg text-xs cursor-not-allowed";
+                return;
+            }
+
+            document.getElementById('sender-modal-bulk-btn').disabled = false;
+            document.getElementById('sender-modal-bulk-btn').className = "px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white font-bold rounded-lg text-xs transition flex items-center gap-1.5 shadow";
+            document.getElementById('sender-modal-bulk-btn').onclick = () => bulkDeleteBySenderDirect(senderAddress, matchingEmails.length);
+
+            matchingEmails.forEach((email, orderIdx) => {
+                const displayName = extractCleanName(email.from);
+                const cleanEmail = extractCleanEmail(email.from);
+                const fallbackBody = email.body || email.snippet || 'No plain text data content inside message.';
+                
+                // এখানে Attachment এর HTML জেনারেট করা হচ্ছে
+                const attachmentSectionHTML = generateAttachmentHTML(email.attachments);
+                
+                listContainer.innerHTML += `
+                    <div class="p-4 bg-slate-950 border border-slate-800/80 rounded-xl space-y-3 shadow-inner">
+                        <div class="flex justify-between items-start gap-4">
+                            <div class="space-y-1 text-xs flex-1 min-w-0">
+                                <div><span class="text-slate-500 font-bold uppercase text-[10px] tracking-wide">1. Friendly Name:</span> <span class="text-indigo-400 font-semibold font-mono">${displayName}</span></div>
+                                <div class="truncate"><span class="text-slate-500 font-bold uppercase text-[10px] tracking-wide">2. Sender Handle:</span> <span class="text-slate-300 font-mono">${cleanEmail}</span></div>
+                                <div class="truncate"><span class="text-slate-500 font-bold uppercase text-[10px] tracking-wide">3. Mail Subject:</span> <span class="text-slate-200 font-bold text-slate-100">${email.subject}</span></div>
+                            </div>
+                            <button onclick="deleteSingleEmailDirect('${email.id}')" 
+                                class="px-2.5 py-1.5 bg-red-950/40 hover:bg-red-600 border border-red-500/20 text-red-400 hover:text-white text-[11px] font-bold rounded-lg transition flex items-center gap-1">
+                                <i class="fas fa-trash-can"></i> Delete
+                            </button>
                         </div>
-                        <button onclick="deleteSingleEmail('${email.id}', ${index})" class="p-2 bg-red-950/40 hover:bg-red-600 text-red-400 hover:text-white rounded-lg border border-red-500/20 transition-all shadow flex items-center justify-center group" title="Delete this email">
-                            <i class="fas fa-trash-can text-xs transition group-hover:scale-110"></i>
-                        </button>
+                        <div class="space-y-1">
+                            <span class="text-slate-500 font-bold uppercase text-[10px] tracking-wide block">4. Main Payload Body:</span>
+                            <div class="text-xs text-slate-400 bg-slate-900/90 p-3 border border-slate-800/50 rounded-lg max-h-24 overflow-y-auto whitespace-pre-wrap leading-relaxed shadow-inner">
+                                ${fallbackBody}
+                            </div>
+                        </div>
+                        <!-- --- NEW FEATURE: 5. Attachment Files Section --- -->
+                        <div class="space-y-1 pt-1">
+                            <span class="text-slate-500 font-bold uppercase text-[10px] tracking-wide block">5. Attached Storage Files:</span>
+                            ${attachmentSectionHTML}
+                        </div>
                     </div>`;
             });
         }
 
-        function deleteSingleEmail(messageId, arrayIndex) {
-            if(!messageId) return;
-
-            document.getElementById('loading-text').innerText = "Moving targeted email to Gmail trash...";
+        window.deleteSingleEmailDirect = function(emailId) {
+            document.getElementById('loading-text').innerText = "Trashing selected sequence file...";
             document.getElementById('inline-spinner').classList.remove('hidden');
 
             fetch('/api/delete-single', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: messageId })
+                body: JSON.stringify({ id: emailId })
             })
             .then(res => res.json())
             .then(data => {
                 document.getElementById('inline-spinner').classList.add('hidden');
                 if(data.status === "success") {
-                    const deletedEmail = activeKeptEmails.splice(arrayIndex, 1)[0];
-                    cumulativeDeleted += 1;
-
-                    const deletedList = document.getElementById('deleted-list');
-                    deletedList.insertAdjacentHTML('afterbegin', `
-                        <div class="p-3 bg-red-500/5 border border-red-500/10 rounded-lg text-sm transition hover:bg-red-500/10">
-                            <p class="font-semibold text-slate-200"><i class="fas fa-times-circle text-red-400 mr-1.5"></i>${deletedEmail.subject}</p>
-                            <p class="text-xs text-slate-400 mt-1 pl-5">From: ${deletedEmail.from}</p>
-                        </div>`);
-
-                    renderLists();
-                    document.getElementById('loading-text').innerText = "🎉 Email successfully moved to Trash!";
-                } else {
-                    throw new Error("Failed to delete");
+                    const targetEmail = [...activeKeptEmails, ...activeJunkEmails].find(e => e.id === emailId);
+                    if(targetEmail) {
+                        recentlyDeletedEmails.unshift(targetEmail);
+                        downloadedHistoryForCSV.push({ subject: targetEmail.subject, from: targetEmail.from, date: targetEmail.date || new Date().toLocaleDateString(), status: "DELETED" });
+                        cumulativeDeleted += 1;
+                    }
+                    activeKeptEmails = activeKeptEmails.filter(e => e.id !== emailId);
+                    activeJunkEmails = activeJunkEmails.filter(e => e.id !== emailId);
+                    applyFiltersOnFly();
+                    document.getElementById('loading-text').innerText = "🎉 Item wiped and logged to history container.";
                 }
+            }).catch(err => console.error(err));
+        };
+
+        window.bulkDeleteBySenderDirect = function(senderAddress, totalCount) {
+            if(!confirm(`Are you sure you want to completely wipe all ${totalCount} emails from:\n${senderAddress}?`)) return;
+
+            document.getElementById('loading-text').innerText = `Purging ${totalCount} items from server...`;
+            document.getElementById('inline-spinner').classList.remove('hidden');
+
+            const targets = [...activeKeptEmails, ...activeJunkEmails].filter(email => extractCleanEmail(email.from) === senderAddress);
+
+            Promise.all(targets.map(email => 
+                fetch('/api/delete-single', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: email.id })
+                }).then(res => res.json())
+            ))
+            .then(() => {
+                document.getElementById('inline-spinner').classList.add('hidden');
+                cumulativeDeleted += targets.length;
+                targets.forEach(email => {
+                    downloadedHistoryForCSV.push({ subject: email.subject, from: email.from, date: email.date || new Date().toLocaleDateString(), status: "SENDER_PURGED" });
+                    recentlyDeletedEmails.unshift(email);
+                });
+                activeKeptEmails = activeKeptEmails.filter(email => extractCleanEmail(email.from) !== senderAddress);
+                activeJunkEmails = activeJunkEmails.filter(email => extractCleanEmail(email.from) !== senderAddress);
+                applyFiltersOnFly();
+                document.getElementById('loading-text').innerText = `🎉 Cleaned ${totalCount} emails from queue.`;
+            }).catch(err => console.error(err));
+        };
+
+        function renderLists() {
+            document.getElementById('stat-scanned').innerText = cumulativeScanned;
+            document.getElementById('stat-deleted').innerText = cumulativeDeleted;
+            
+            document.getElementById('stat-junk').innerText = activeJunkEmails.length;
+            document.getElementById('stat-kept').innerText = activeKeptEmails.length;
+            
+            document.getElementById('junk-badge').innerText = activeJunkEmails.length;
+            document.getElementById('kept-badge').innerText = activeKeptEmails.length;
+            document.getElementById('deleted-badge').innerText = recentlyDeletedEmails.length;
+
+            const keptEl = document.getElementById('kept-list');
+            keptEl.innerHTML = "";
+            activeKeptEmails.forEach(email => {
+                const dateStr = email.date ? new Date(email.date).toLocaleString() : 'N/A';
+                const plainSnippet = email.body || email.snippet || 'No text content available.';
+                // ড্যাশবোর্ড কার্ডেও যদি এটাচমেন্টের আইকন দেখাতে চান:
+                const hasAttachmentIcon = email.attachments && email.attachments.length > 0 ? `<i class="fas fa-paperclip text-indigo-400 ml-1.5 shadow-sm"></i>` : '';
+                
+                keptEl.innerHTML += `
+                    <div class="p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl space-y-1.5 transition hover:bg-emerald-500/10 cursor-pointer"
+                         onclick="openPreviewModal('${btoa(unescape(encodeURIComponent(email.subject)))}', '${btoa(unescape(encodeURIComponent(email.from)))}', '${btoa(unescape(encodeURIComponent(plainSnippet)))}', '${dateStr}')">
+                        <div class="flex justify-between items-start gap-2">
+                            <p class="font-bold text-slate-200 text-xs truncate hover:text-indigo-400 transition flex-1">${email.subject} ${hasAttachmentIcon}</p>
+                            <span class="text-[9px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.2 rounded font-mono shrink-0">${dateStr.split(',')[0]}</span>
+                        </div>
+                        <p class="text-slate-400 truncate text-[10px] font-medium"><i class="far fa-envelope mr-1 text-slate-500"></i>${email.from}</p>
+                        <p class="text-[10px] font-mono text-slate-500 truncate italic bg-slate-950/50 p-1.5 rounded">"${plainSnippet.substring(0, 65)}..."</p>
+                    </div>`;
+            });
+
+            const junkEl = document.getElementById('junk-list');
+            junkEl.innerHTML = "";
+            activeJunkEmails.forEach((email, index) => {
+                const dateStr = email.date ? new Date(email.date).toLocaleString() : 'N/A';
+                const plainSnippet = email.body || email.snippet || 'No text content available.';
+                const hasAttachmentIcon = email.attachments && email.attachments.length > 0 ? `<i class="fas fa-paperclip text-amber-400 ml-1.5"></i>` : '';
+                
+                junkEl.innerHTML += `
+                    <div class="p-3 bg-amber-500/5 border border-amber-500/10 rounded-xl space-y-2 transition hover:bg-amber-500/10">
+                        <div class="cursor-pointer" onclick="openPreviewModal('${btoa(unescape(encodeURIComponent(email.subject)))}', '${btoa(unescape(encodeURIComponent(email.from)))}', '${btoa(unescape(encodeURIComponent(plainSnippet)))}', '${dateStr}')">
+                            <div class="flex justify-between items-start gap-2">
+                                <p class="font-bold text-slate-200 text-xs truncate hover:text-indigo-400 transition flex-1"><i class="fas fa-circle-dot text-amber-400 mr-1 text-[9px]"></i>${email.subject} ${hasAttachmentIcon}</p>
+                                <span class="text-[9px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.2 rounded font-mono shrink-0">${dateStr.split(',')[0]}</span>
+                            </div>
+                            <p class="text-slate-400 truncate text-[10px] mt-0.5"><i class="far fa-user mr-1 text-slate-500"></i>${email.from}</p>
+                            <p class="text-[10px] text-slate-500 truncate italic mt-1.5 bg-slate-950/50 p-1.5 rounded">"${plainSnippet.substring(0, 65)}..."</p>
+                        </div>
+                        <div class="flex justify-end gap-1.5 pt-1 border-t border-slate-800/40">
+                            <button onclick="moveJunkToSafe(${index})" class="px-2.5 py-1 bg-slate-800 hover:bg-emerald-600/30 text-slate-300 hover:text-emerald-400 rounded-md border border-slate-700 transition flex items-center gap-1 text-[10px]">
+                                <i class="fas fa-check"></i> Keep Safe
+                            </button>
+                            <button onclick="deleteSingleJunk(${index})" class="px-2.5 py-1 bg-red-950/40 hover:bg-red-600 text-red-400 hover:text-white rounded-md border border-red-500/20 transition shadow flex items-center gap-1 text-[10px]">
+                                <i class="fas fa-trash-can"></i> Delete
+                            </button>
+                        </div>
+                    </div>`;
+            });
+
+            const deletedEl = document.getElementById('deleted-list');
+            deletedEl.innerHTML = "";
+            recentlyDeletedEmails.forEach((email, index) => {
+                deletedEl.innerHTML += `
+                    <div class="p-2 bg-slate-900 border border-slate-800 rounded-lg text-xs flex items-center gap-2 max-w-[240px]">
+                        <p class="font-semibold text-slate-500 line-through truncate flex-1 pl-1">${email.subject}</p>
+                        <button onclick="undoDeletedEmail(${index})" class="px-1.5 py-0.5 bg-indigo-600/20 hover:bg-indigo-600 text-indigo-400 hover:text-white border border-indigo-500/30 rounded text-[9px] font-bold transition">
+                            Undo
+                        </button>
+                    </div>`;
+            });
+
+            if(activeJunkEmails.length > 0) document.getElementById('final-delete-btn').classList.remove('hidden');
+            else document.getElementById('final-delete-btn').classList.add('hidden');
+
+            if(downloadedHistoryForCSV.length > 0) document.getElementById('export-csv-btn').classList.remove('hidden');
+            else document.getElementById('export-csv-btn').classList.add('hidden');
+        }
+
+        function openPreviewModal(subEnc, fromEnc, bodyEnc, dateStr) {
+            document.getElementById('modal-subject').innerText = decodeURIComponent(escape(atob(subEnc)));
+            document.getElementById('modal-from').innerText = "Sender Handle: " + decodeURIComponent(escape(atob(fromEnc)));
+            document.getElementById('modal-date').innerText = "Received Stamp: " + dateStr;
+            document.getElementById('modal-body').innerText = decodeURIComponent(escape(atob(bodyEnc)));
+            document.getElementById('preview-modal').classList.remove('hidden');
+        }
+        
+        document.getElementById('close-modal-btn').addEventListener('click', () => document.getElementById('preview-modal').classList.add('hidden'));
+        document.getElementById('modal-ok-btn').addEventListener('click', () => document.getElementById('preview-modal').classList.add('hidden'));
+
+        function moveJunkToSafe(index) {
+            const email = activeJunkEmails.splice(index, 1)[0];
+            activeKeptEmails.push(email);
+            applyFiltersOnFly();
+        }
+
+        function deleteSingleJunk(index) {
+            const email = activeJunkEmails[index];
+            document.getElementById('loading-text').innerText = "Trashing single item index...";
+            document.getElementById('inline-spinner').classList.remove('hidden');
+
+            fetch('/api/delete-single', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: email.id })
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('inline-spinner').classList.add('hidden');
+                if(data.status === "success") {
+                    activeJunkEmails.splice(index, 1);
+                    recentlyDeletedEmails.unshift(email);
+                    downloadedHistoryForCSV.push({ subject: email.subject, from: email.from, date: email.date || new Date().toLocaleDateString(), status: "DELETED" });
+                    cumulativeDeleted += 1;
+                    applyFiltersOnFly();
+                    document.getElementById('loading-text').innerText = "🎉 Shipped into trash layer successfully.";
+                }
+            }).catch(err => console.error(err));
+        }
+
+        window.undoDeletedEmail = function(index) {
+            const email = recentlyDeletedEmails[index];
+            document.getElementById('loading-text').innerText = "Restoring into active system layer...";
+            document.getElementById('inline-spinner').classList.remove('hidden');
+
+            fetch('/api/restore-single', { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: email.id })
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('inline-spinner').classList.add('hidden');
+                recentlyDeletedEmails.splice(index, 1);
+                activeKeptEmails.push(email);
+                downloadedHistoryForCSV = downloadedHistoryForCSV.filter(item => item.subject !== email.subject);
+                if(cumulativeDeleted > 0) cumulativeDeleted -= 1;
+                applyFiltersOnFly();
+                document.getElementById('loading-text').innerText = "🔄 Restored back successfully.";
             })
             .catch(err => {
                 document.getElementById('inline-spinner').classList.add('hidden');
-                document.getElementById('loading-text').innerText = "❌ Error executing server request.";
-                console.error(err);
+                recentlyDeletedEmails.splice(index, 1);
+                activeKeptEmails.push(email);
+                if(cumulativeDeleted > 0) cumulativeDeleted -= 1;
+                applyFiltersOnFly();
             });
         }
 
+        // --- Mock Data Insertion Note ---
+        // আপনার এপিআই জেসন রেসপন্সে (`/api/scan`) প্রতিটি অবজেক্টে `attachments` ফিল্ড পাস করবেন।
+        // ফরম্যাট: attachments: [{ filename: "invoice.pdf", size: "245 KB" }]
         function scanBatch(nextKey = null) {
-            document.getElementById('status-badge').innerText = "Scanning Active...";
+            document.getElementById('status-badge').innerText = "Scanning Running...";
             document.getElementById('status-badge').className = "px-3 py-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-full text-xs animate-pulse";
-            document.getElementById('loading-text').innerText = "Scanning and filtering inbox messages...";
+            document.getElementById('loading-text').innerText = "Compiling mapping data indices from cloud storage servers...";
             document.getElementById('inline-spinner').classList.remove('hidden');
             document.getElementById('load-more-btn').classList.add('hidden');
             document.getElementById('rescan-btn').classList.add('hidden');
 
-            const inputVal = document.getElementById('keywords-input').value;
-            const customKeywords = inputVal.split(',').map(k => k.replace(/\s+/g, ' ').trim()).filter(k => k !== "");
+            const customKeywords = [];
+            const dateFilterQuery = getDateQuery(dateRangeSelect.value);
+            if(dateFilterQuery) customKeywords.push(dateFilterQuery);
 
             fetch('/api/scan', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ code, pageToken: nextKey, customKeywords })
             })
-            .then(res => {
-                if(!res.ok) throw new Error("Request failed. Please re-login.");
-                return res.json();
-            })
+            .then(res => res.json())
             .then(data => {
                 document.getElementById('inline-spinner').classList.add('hidden');
-                
                 if(cumulativeScanned === 0) fetchUserProfile();
 
                 cumulativeScanned += data.totalScanned;
-                cumulativeDeleted += data.deletedCount;
                 currentNextPageToken = data.nextPageToken;
 
-                const deletedList = document.getElementById('deleted-list');
-                data.deletedEmails.forEach(email => {
-                    deletedList.insertAdjacentHTML('afterbegin', `
-                        <div class="p-3 bg-red-500/5 border border-red-500/10 rounded-lg text-sm transition hover:bg-red-500/10">
-                            <p class="font-semibold text-slate-200"><i class="fas fa-times-circle text-red-400 mr-1.5"></i>${email.subject}</p>
-                            <p class="text-xs text-slate-400 mt-1 pl-5">From: ${email.from}</p>
-                        </div>`);
-                });
+                // ব্যাকএন্ড ডাটা ফেচিং এলাইনমেন্ট
+                const cloudFetched = [...(data.keptEmails || []), ...(data.deletedEmails || [])];
+                activeKeptEmails = [...activeKeptEmails, cloudFetched];
+                
+                applyFiltersOnFly();
 
-                activeKeptEmails = [...activeKeptEmails, ...data.keptEmails];
-                renderLists();
-
-                document.getElementById('status-badge').innerText = "Batch Done";
+                document.getElementById('status-badge').innerText = "Batch Synced";
                 document.getElementById('status-badge').className = "px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs";
 
-                if (currentNextPageToken) {
-                    document.getElementById('loading-text').innerText = "More emails found! Click button to scan next batch.";
-                    document.getElementById('load-more-btn').classList.remove('hidden');
-                } else {
-                    document.getElementById('loading-text').innerText = "🎉 Success! Entire inbox has been fully scanned.";
-                    document.getElementById('rescan-btn').classList.remove('hidden');
-                }
-            })
-            .catch(err => {
+                if (currentNextPageToken) document.getElementById('load-more-btn').classList.remove('hidden');
+                else document.getElementById('rescan-btn').classList.remove('hidden');
+            }).catch(err => console.error(err));
+        }
+
+        document.getElementById('final-delete-btn').addEventListener('click', () => {
+            if(activeJunkEmails.length === 0) return;
+            const totalToWipe = activeJunkEmails.length;
+            document.getElementById('loading-text').innerText = `Bulk purging ${totalToWipe} matched records...`;
+            document.getElementById('inline-spinner').classList.remove('hidden');
+
+            Promise.all(activeJunkEmails.map(email => 
+                fetch('/api/delete-single', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: email.id })
+                }).then(res => res.json())
+            ))
+            .then(() => {
                 document.getElementById('inline-spinner').classList.add('hidden');
-                document.getElementById('loading-text').innerHTML = `<span class="text-red-400 font-semibold">Error: ${err.message}</span>`;
-            });
-        }
-
-        document.getElementById('instant-filter-btn').addEventListener('click', () => {
-            const inputVal = document.getElementById('keywords-input').value;
-            const customKeywords = inputVal.split(',').map(k => k.replace(/\s+/g, ' ').trim().toLowerCase()).filter(k => k !== "");
-
-            if(customKeywords.length === 0 || activeKeptEmails.length === 0) return;
-
-            document.getElementById('loading-text').innerText = "Filtering screen list...";
-            
-            const toKeep = [];
-            const toDelete = [];
-
-            activeKeptEmails.forEach(email => {
-                const cleanSub = email.subject.replace(/\s+/g, ' ').trim().toLowerCase();
-                const cleanFrom = email.from.replace(/\s+/g, ' ').trim().toLowerCase();
-                const matchSpam = customKeywords.some(keyword => cleanSub.includes(keyword) || cleanFrom.includes(keyword));
-
-                if (matchSpam) toDelete.push(email);
-                else toKeep.push(email);
-            });
-
-            if(toDelete.length > 0) {
-                document.getElementById('inline-spinner').classList.remove('hidden');
-                Promise.all(toDelete.map(email => 
-                    fetch('/api/delete-single', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id: email.id })
-                    }).then(res => res.json())
-                ))
-                .then(() => {
-                    document.getElementById('inline-spinner').classList.add('hidden');
-                    cumulativeDeleted += toDelete.length;
-                    activeKeptEmails = toKeep;
-
-                    const deletedList = document.getElementById('deleted-list');
-                    toDelete.forEach(email => {
-                        deletedList.insertAdjacentHTML('afterbegin', `
-                            <div class="p-3 bg-red-500/5 border border-red-500/10 rounded-lg text-sm transition hover:bg-red-500/10">
-                                <p class="font-semibold text-slate-200"><i class="fas fa-times-circle text-red-400 mr-1.5"></i>${email.subject}</p>
-                                <p class="text-xs text-slate-400 mt-1 pl-5">From: ${email.from}</p>
-                            </div>`);
-                    });
-                    renderLists();
-                    document.getElementById('loading-text').innerText = `🎉 Bulk filtered & deleted ${toDelete.length} emails!`;
+                cumulativeDeleted += totalToWipe;
+                activeJunkEmails.forEach(email => {
+                    downloadedHistoryForCSV.push({ subject: email.subject, from: email.from, date: email.date || new Date().toLocaleDateString(), status: "BULK_DELETED" });
                 });
-            } else {
-                document.getElementById('loading-text').innerText = "❌ No matching emails found on screen.";
-            }
+                recentlyDeletedEmails = [...activeJunkEmails, ...recentlyDeletedEmails];
+                activeJunkEmails = [];
+                applyFiltersOnFly();
+                document.getElementById('loading-text').innerText = `🎉 Successfully cleaned ${totalToWipe} emails!`;
+            }).catch(err => console.error(err));
         });
 
-        if (code) {
-            scanBatch(null);
-        } else {
-            window.location.href = "/";
-        }
-
-        document.getElementById('load-more-btn').addEventListener('click', () => {
-            scanBatch(currentNextPageToken);
+        document.getElementById('export-csv-btn').addEventListener('click', () => {
+            if(downloadedHistoryForCSV.length === 0) return;
+            let csvContent = "data:text/csv;charset=utf-8,Date,Email Subject,Sender (From),Action Status\n";
+            downloadedHistoryForCSV.forEach(row => {
+                let cleanSub = row.subject.replace(/"/g, '""');
+                let cleanFrom = row.from.replace(/"/g, '""');
+                csvContent += `"${row.date}","${cleanSub}","${cleanFrom}","${row.status}"\n`;
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Email_Clean_Report_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         });
 
-        document.getElementById('rescan-btn').addEventListener('click', () => {
+        function resetDashboardState() {
             cumulativeScanned = 0;
             cumulativeDeleted = 0;
             activeKeptEmails = [];
+            activeJunkEmails = [];
+            recentlyDeletedEmails = [];
             document.getElementById('deleted-list').innerHTML = "";
+            document.getElementById('junk-list').innerHTML = "";
+            document.getElementById('kept-list').innerHTML = "";
+            applyFiltersOnFly();
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.clear(); sessionStorage.clear(); window.location.href = "/";
+        });
+
+        if (code) scanBatch(null);
+        else window.location.href = "/";
+
+        document.getElementById('load-more-btn').addEventListener('click', () => scanBatch(currentNextPageToken));
+        document.getElementById('rescan-btn').addEventListener('click', () => {
+            resetDashboardState();
+            categoryCheckboxes.forEach(cb => cb.checked = false);
+            keywordsInput.value = "";
+            dateRangeSelect.value = "all";
             scanBatch(null);
         });
     </script>
