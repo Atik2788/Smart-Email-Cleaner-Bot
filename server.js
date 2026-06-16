@@ -11,7 +11,24 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-app.use(cors({ origin: "http://localhost:5000", credentials: true })); 
+
+const allowedOrigins = [
+  "http://localhost:5000",
+  "https://smart-email-cleaner-bot.onrender.com"
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true
+}));
+
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public"))); 
 
