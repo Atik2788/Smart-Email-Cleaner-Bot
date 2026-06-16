@@ -1,0 +1,10 @@
+# Node modules (huge folder, no need to push)
+node_modules/
+
+# Environment variables containing credentials
+.env
+.env.local
+
+# Logs and system files
+npm-debug.log*
+.DS_Store

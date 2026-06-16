@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Email Cleaner</title>
+    <script>window.tailwind = { config: { corePlugins: { preflight: true } } };</script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        @keyframes sequential-dots {
+            0%, 20% { content: "."; }
+            40% { content: ".."; }
+            60%, 100% { content: "..."; }
+        }
+        .animate-dots::after {
+            content: ".";
+            animation: sequential-dots 1.8s infinite steps(1);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
+    <div class="max-w-6xl mx-auto px-4 py-8">
+        
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b border-slate-800 pb-5 gap-4">
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent flex items-center">
+                <span><i class="fas fa-shield-halved mr-2 text-indigo-400"></i>Smart Email Cleaner</span>
+                <span class="animate-dots text-cyan-400 ml-0.5 min-w-[24px]"></span>
+            </h1>
+            
+            <div class="flex flex-wrap items-center gap-4 w-full sm:w-auto justify-end">
+                <div id="user-profile-card" class="hidden items-center gap-3 bg-slate-900 border border-slate-800 rounded-xl p-2 pr-4 shadow-md">
+                    <img id="user-avatar" src="" alt="Avatar" class="w-8 h-8 rounded-full border border-indigo-500/30 object-cover">
+                    <div class="text-left max-w-[180px]">
+                        <p id="user-name" class="text-xs font-bold text-slate-200 truncate"></p>
+                        <p id="user-email" class="text-[10px] text-slate-400 truncate"></p>
+                    </div>
+                </div>
+
+                <a href="/auth/google" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold transition flex items-center gap-2 shadow">
+                    <i class="fas fa-user-plus text-cyan-400"></i> Switch Another Account
+                </a>
+                <span id="status-badge" class="px-3 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full text-xs">Connecting...</span>
+            </div>
+        </div>
+
+        <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 mb-8 shadow-xl">
+            <h2 class="text-sm font-semibold text-indigo-400 uppercase tracking-wider mb-3">
+                <i class="fas fa-filter mr-2"></i> Custom Clean Filters (Keywords, Names or Emails)
+            </h2>
+            <div class="flex flex-col md:flex-row gap-3">
+                <input type="text" id="keywords-input" 
+                    class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition shadow-inner"
+                    value="daraz, ketogo, please confirm, please review, security code, verification code, otp, promo, sale">
+                
+                <button id="instant-filter-btn" class="px-6 py-3 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 font-bold rounded-lg text-sm transition shadow flex items-center justify-center gap-2 whitespace-nowrap">
+                    <i class="fas fa-bolt"></i> Bulk Filter & Delete
+                </button>
+            </div>
+            <p class="text-xs text-slate-500 mt-2">
+                💡 <b>Rule:</b> You can input comma-separated targets above to clean en masse, or look down at the Safe list and hit the <b>Trash Icon (<i class="fas fa-trash-can"></i>)</b> to target explicit single emails.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-xl">
+                <p class="text-sm text-slate-400 uppercase font-semibold">Total Scanned</p>
+                <h3 class="text-4xl font-extrabold mt-2 text-indigo-400" id="stat-scanned">0</h3>
+            </div>
+            <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-xl">
+                <p class="text-sm text-slate-400 uppercase font-semibold">Deleted (Junk wiped)</p>
+                <h3 class="text-4xl font-extrabold mt-2 text-red-400" id="stat-deleted">0</h3>
+            </div>
+            <div class="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-xl">
+                <p class="text-sm text-slate-400 uppercase font-semibold">Kept (Safe Inbox)</p>
+                <h3 class="text-4xl font-extrabold mt-2 text-emerald-400" id="stat-kept">0</h3>
+            </div>
+        </div>
+
+        <div class="bg-slate-900 p-4 rounded-xl border border-slate-800 mb-8 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div id="inline-spinner" class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-indigo-500 hidden"></div>
+                <p id="loading-text" class="text-sm text-slate-400">Ready to clean...</p>
+            </div>
+            <div class="flex gap-2">
+                <button id="rescan-btn" class="hidden px-5 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 font-semibold rounded-lg text-sm transition shadow flex items-center gap-2">
+                    <i class="fas fa-redo"></i> Restart Scan
+                </button>
+                <button id="load-more-btn" class="hidden px-5 py-2 bg-indigo-600 hover:bg-indigo-500 font-semibold rounded-lg text-sm transition shadow-lg flex items-center gap-2">
+                    <i class="fas fa-sync"></i> Scan Next 100 Emails
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="bg-slate-900 rounded-xl border border-red-500/20 p-6 shadow-xl">
+                <h2 class="text-lg font-bold text-red-400 mb-4 flex items-center justify-between">
+                    <span><i class="fas fa-trash-can mr-2"></i> Deleted Junk Emails List</span>
+                    <span id="deleted-badge" class="text-xs bg-red-500/10 px-2.5 py-0.5 rounded-md border border-red-500/20">0</span>
+                </h2>
+                <div class="max-h-[500px] overflow-y-auto space-y-3 pr-2" id="deleted-list"></div>
+            </div>
+
+            <div class="bg-slate-900 rounded-xl border border-emerald-500/20 p-6 shadow-xl">
+                <h2 class="text-lg font-bold text-emerald-400 mb-4 flex items-center justify-between">
+                    <span><i class="fas fa-check-circle mr-2"></i> Kept Safe Emails List</span>
+                    <span id="kept-badge" class="text-xs bg-emerald-500/10 px-2.5 py-0.5 rounded-md border border-emerald-500/20">0</span>
+                </h2>
+                <div class="max-h-[500px] overflow-y-auto space-y-3 pr-2" id="kept-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        
+        let currentNextPageToken = null;
+        let cumulativeScanned = 0;
+        let cumulativeDeleted = 0;
+        let activeKeptEmails = [];
+
+        function fetchUserProfile() {
+            fetch('/api/user-profile')
+            .then(res => res.json())
+            .then(user => {
+                if(user && user.email) {
+                    document.getElementById('user-avatar').src = user.picture || 'https://via.placeholder.com/150';
+                    document.getElementById('user-name').innerText = user.name || 'Google User';
+                    document.getElementById('user-email').innerText = user.email;
+                    document.getElementById('user-profile-card').classList.remove('hidden');
+                    document.getElementById('user-profile-card').classList.add('flex');
+                }
+            })
+            .catch(err => console.error("Error pulling profile:", err));
+        }
+
+        function renderLists() {
+            document.getElementById('stat-scanned').innerText = cumulativeScanned;
+            document.getElementById('stat-deleted').innerText = cumulativeDeleted;
+            document.getElementById('stat-kept').innerText = cumulativeScanned - cumulativeDeleted;
+            
+            document.getElementById('deleted-badge').innerText = cumulativeDeleted;
+            document.getElementById('kept-badge').innerText = activeKeptEmails.length;
+
+            const keptListEl = document.getElementById('kept-list');
+            keptListEl.innerHTML = "";
+            
+            activeKeptEmails.forEach((email, index) => {
+                keptListEl.innerHTML += `
+                    <div class="p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-lg text-sm flex justify-between items-center gap-4 transition hover:bg-emerald-500/10">
+                        <div class="flex-1 min-w-0">
+                            <p class="font-semibold text-slate-200 truncate"><i class="fas fa-check text-emerald-400 mr-1.5"></i>${email.subject}</p>
+                            <p class="text-xs text-slate-400 mt-1 pl-5 truncate">From: ${email.from}</p>
+                        </div>
+                        <button onclick="deleteSingleEmail('${email.id}', ${index})" class="p-2 bg-red-950/40 hover:bg-red-600 text-red-400 hover:text-white rounded-lg border border-red-500/20 transition-all shadow flex items-center justify-center group" title="Delete this email">
+                            <i class="fas fa-trash-can text-xs transition group-hover:scale-110"></i>
+                        </button>
+                    </div>`;
+            });
+        }
+
+        function deleteSingleEmail(messageId, arrayIndex) {
+            if(!messageId) return;
+
+            document.getElementById('loading-text').innerText = "Moving targeted email to Gmail trash...";
+            document.getElementById('inline-spinner').classList.remove('hidden');
+
+            fetch('/api/delete-single', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: messageId })
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('inline-spinner').classList.add('hidden');
+                if(data.status === "success") {
+                    const deletedEmail = activeKeptEmails.splice(arrayIndex, 1)[0];
+                    cumulativeDeleted += 1;
+
+                    const deletedList = document.getElementById('deleted-list');
+                    deletedList.insertAdjacentHTML('afterbegin', `
+                        <div class="p-3 bg-red-500/5 border border-red-500/10 rounded-lg text-sm transition hover:bg-red-500/10">
+                            <p class="font-semibold text-slate-200"><i class="fas fa-times-circle text-red-400 mr-1.5"></i>${deletedEmail.subject}</p>
+                            <p class="text-xs text-slate-400 mt-1 pl-5">From: ${deletedEmail.from}</p>
+                        </div>`);
+
+                    renderLists();
+                    document.getElementById('loading-text').innerText = "🎉 Email successfully moved to Trash!";
+                } else {
+                    throw new Error("Failed to delete");
+                }
+            })
+            .catch(err => {
+                document.getElementById('inline-spinner').classList.add('hidden');
+                document.getElementById('loading-text').innerText = "❌ Error executing server request.";
+                console.error(err);
+            });
+        }
+
+        function scanBatch(nextKey = null) {
+            document.getElementById('status-badge').innerText = "Scanning Active...";
+            document.getElementById('status-badge').className = "px-3 py-1 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-full text-xs animate-pulse";
+            document.getElementById('loading-text').innerText = "Scanning and filtering inbox messages...";
+            document.getElementById('inline-spinner').classList.remove('hidden');
+            document.getElementById('load-more-btn').classList.add('hidden');
+            document.getElementById('rescan-btn').classList.add('hidden');
+
+            const inputVal = document.getElementById('keywords-input').value;
+            const customKeywords = inputVal.split(',').map(k => k.replace(/\s+/g, ' ').trim()).filter(k => k !== "");
+
+            fetch('/api/scan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code, pageToken: nextKey, customKeywords })
+            })
+            .then(res => {
+                if(!res.ok) throw new Error("Request failed. Please re-login.");
+                return res.json();
+            })
+            .then(data => {
+                document.getElementById('inline-spinner').classList.add('hidden');
+                
+                if(cumulativeScanned === 0) fetchUserProfile();
+
+                cumulativeScanned += data.totalScanned;
+                cumulativeDeleted += data.deletedCount;
+                currentNextPageToken = data.nextPageToken;
+
+                const deletedList = document.getElementById('deleted-list');
+                data.deletedEmails.forEach(email => {
+                    deletedList.insertAdjacentHTML('afterbegin', `
+                        <div class="p-3 bg-red-500/5 border border-red-500/10 rounded-lg text-sm transition hover:bg-red-500/10">
+                            <p class="font-semibold text-slate-200"><i class="fas fa-times-circle text-red-400 mr-1.5"></i>${email.subject}</p>
+                            <p class="text-xs text-slate-400 mt-1 pl-5">From: ${email.from}</p>
+                        </div>`);
+                });
+
+                activeKeptEmails = [...activeKeptEmails, ...data.keptEmails];
+                renderLists();
+
+                document.getElementById('status-badge').innerText = "Batch Done";
+                document.getElementById('status-badge').className = "px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs";
+
+                if (currentNextPageToken) {
+                    document.getElementById('loading-text').innerText = "More emails found! Click button to scan next batch.";
+                    document.getElementById('load-more-btn').classList.remove('hidden');
+                } else {
+                    document.getElementById('loading-text').innerText = "🎉 Success! Entire inbox has been fully scanned.";
+                    document.getElementById('rescan-btn').classList.remove('hidden');
+                }
+            })
+            .catch(err => {
+                document.getElementById('inline-spinner').classList.add('hidden');
+                document.getElementById('loading-text').innerHTML = `<span class="text-red-400 font-semibold">Error: ${err.message}</span>`;
+            });
+        }
+
+        document.getElementById('instant-filter-btn').addEventListener('click', () => {
+            const inputVal = document.getElementById('keywords-input').value;
+            const customKeywords = inputVal.split(',').map(k => k.replace(/\s+/g, ' ').trim().toLowerCase()).filter(k => k !== "");
+
+            if(customKeywords.length === 0 || activeKeptEmails.length === 0) return;
+
+            document.getElementById('loading-text').innerText = "Filtering screen list...";
+            
+            const toKeep = [];
+            const toDelete = [];
+
+            activeKeptEmails.forEach(email => {
+                const cleanSub = email.subject.replace(/\s+/g, ' ').trim().toLowerCase();
+                const cleanFrom = email.from.replace(/\s+/g, ' ').trim().toLowerCase();
+                const matchSpam = customKeywords.some(keyword => cleanSub.includes(keyword) || cleanFrom.includes(keyword));
+
+                if (matchSpam) toDelete.push(email);
+                else toKeep.push(email);
+            });
+
+            if(toDelete.length > 0) {
+                document.getElementById('inline-spinner').classList.remove('hidden');
+                Promise.all(toDelete.map(email => 
+                    fetch('/api/delete-single', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: email.id })
+                    }).then(res => res.json())
+                ))
+                .then(() => {
+                    document.getElementById('inline-spinner').classList.add('hidden');
+                    cumulativeDeleted += toDelete.length;
+                    activeKeptEmails = toKeep;
+
+                    const deletedList = document.getElementById('deleted-list');
+                    toDelete.forEach(email => {
+                        deletedList.insertAdjacentHTML('afterbegin', `
+                            <div class="p-3 bg-red-500/5 border border-red-500/10 rounded-lg text-sm transition hover:bg-red-500/10">
+                                <p class="font-semibold text-slate-200"><i class="fas fa-times-circle text-red-400 mr-1.5"></i>${email.subject}</p>
+                                <p class="text-xs text-slate-400 mt-1 pl-5">From: ${email.from}</p>
+                            </div>`);
+                    });
+                    renderLists();
+                    document.getElementById('loading-text').innerText = `🎉 Bulk filtered & deleted ${toDelete.length} emails!`;
+                });
+            } else {
+                document.getElementById('loading-text').innerText = "❌ No matching emails found on screen.";
+            }
+        });
+
+        if (code) {
+            scanBatch(null);
+        } else {
+            window.location.href = "/";
+        }
+
+        document.getElementById('load-more-btn').addEventListener('click', () => {
+            scanBatch(currentNextPageToken);
+        });
+
+        document.getElementById('rescan-btn').addEventListener('click', () => {
+            cumulativeScanned = 0;
+            cumulativeDeleted = 0;
+            activeKeptEmails = [];
+            document.getElementById('deleted-list').innerHTML = "";
+            scanBatch(null);
+        });
+    </script>
+</body>
+</html>
